@@ -30,10 +30,11 @@
 .pub-cache/
 .pub/
 /build/
-lib/const.dart
+
 
 # Web related
 lib/generated_plugin_registrant.dart
+lib/const.dart
 
 # Symbolication related
 app.*.symbols

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:socket_io/generated_route.dart';
 import 'package:socket_io/home.dart';
 
 void main() {
@@ -11,7 +12,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Home(),
+      initialRoute: "/input-nickname",
+      onGenerateRoute:(settings) {
+        GeneratedRoutes.onGeneratedRoutes(settings);
+      },
+      onUnknownRoute: (_){
+        GeneratedRoutes.onUnknownRote();
+      },
     );
   }
 }

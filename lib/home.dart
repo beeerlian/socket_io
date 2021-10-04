@@ -6,7 +6,8 @@ import 'package:socket_io/utils/const.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
 class Home extends StatefulWidget {
-  Home({Key? key}) : super(key: key);
+  Home({Key? key, required this.nickname}) : super(key: key);
+  String nickname;
   StreamSocket streamSocket = StreamSocket();
   @override
   State<Home> createState() => _HomeState();
@@ -15,9 +16,14 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   late io.Socket socket;
   @override
+  void dispose() {
+    widget.streamSocket.dispose();
+    super.dispose();
+  }
+
+  @override
   void initState() {
     connectToWebscoketServer();
-
     super.initState();
   }
 
@@ -44,13 +50,17 @@ class _HomeState extends State<Home> {
   }
 
   sendMessage(String message) {
-    socket.emit("message", {"text": message});
+    socket.emit("message", {
+      "sender": widget.nickname,
+      "text": message,
+    });
   }
 
   // Listen to all message events from connected users
-  void handleMessage(dynamic data ) {
+  void handleMessage(dynamic data) {
     log(data.toString());
-    widget.streamSocket.addResponse((data as Map<String, dynamic>)['text'].toString());
+    widget.streamSocket
+        .addResponse((data as Map<String, dynamic>)['text'].toString());
   }
 
   @override
