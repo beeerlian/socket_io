@@ -2,7 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:socket_io/streamsocket.dart';
-import 'package:socket_io/utils/const.dart';
+import 'package:socket_io/const/const.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
 class Home extends StatefulWidget {
@@ -14,15 +14,18 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  late ScrollController _scrollController;
   late io.Socket socket;
   @override
   void dispose() {
+    _scrollController.dispose();
     widget.streamSocket.dispose();
     super.dispose();
   }
 
   @override
   void initState() {
+    _scrollController = ScrollController();
     connectToWebscoketServer();
     super.initState();
   }
@@ -38,7 +41,7 @@ class _HomeState extends State<Home> {
       socket.onConnect((data) {
         log("koneksi berhasil");
         socket.emit('join');
-        socket.emit('message', {"text": "${socket.id} joined"});
+        socket.emit('message', {"text": "${widget.nickname} joined"});
       });
 
       socket.on('join', (data) => socket.emit('join'));
@@ -59,24 +62,27 @@ class _HomeState extends State<Home> {
   // Listen to all message events from connected users
   void handleMessage(dynamic data) {
     log(data.toString());
-    widget.streamSocket
-        .addResponse((data as Map<String, dynamic>)['text'].toString());
+    widget.streamSocket.addResponse((data as Map<String, dynamic>));
+  }
+
+  void moveScroll() {
+    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: StreamBuilder<String>(
+      body: StreamBuilder<Map<String, dynamic>>(
           stream: widget.streamSocket.getResponse,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              StreamSocket.messages.add(snapshot.data as String);
+              StreamSocket.messages.add(snapshot.data as Map<String, dynamic>);
               return ListView.builder(
+                controller: _scrollController,
+                shrinkWrap: true,
                 itemCount: StreamSocket.messages.length,
                 itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(StreamSocket.messages[index]),
-                  );
+                  return _buildChatBox(index);
                 },
               );
             } else {
@@ -86,9 +92,37 @@ class _HomeState extends State<Home> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           sendMessage("Hai dari user mobile");
-          socket.disconnect();
+          moveScroll();
         },
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildChatBox(int index) {
+    return Container(
+      alignment:
+          StreamSocket.messages[index]["sender"].toString() == widget.nickname
+              ? const Alignment(1, 0)
+              // ignore: unnecessary_null_comparison
+              : StreamSocket.messages[index]["sender"].toString() == null
+                  ? const Alignment(0, 0)
+                  : const Alignment(-1, 0),
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(10, 5, 10, 5),
+        padding: const EdgeInsets.all(5),
+        decoration: BoxDecoration(
+            color: Colors.amber.shade200,
+            borderRadius: BorderRadius.circular(10)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            StreamSocket.messages[index]["sender"] != null
+                ? Text(StreamSocket.messages[index]["sender"].toString())
+                : Container(),
+            Text(StreamSocket.messages[index]['text'].toString()),
+          ],
+        ),
       ),
     );
   }

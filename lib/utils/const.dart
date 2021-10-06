@@ -1,1 +1,0 @@
-const String uri = "http://202.83.121.174/example-chat";

@@ -10,6 +10,7 @@ class InputNamePage extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal : 20),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               TextField(
                 controller: nickname,

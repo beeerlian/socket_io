@@ -14,10 +14,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       initialRoute: "/input-nickname",
       onGenerateRoute:(settings) {
-        GeneratedRoutes.onGeneratedRoutes(settings);
+        return GeneratedRoutes.onGeneratedRoutes(settings);
       },
       onUnknownRoute: (_){
-        GeneratedRoutes.onUnknownRote();
+        return GeneratedRoutes.onUnknownRote();
       },
     );
   }
