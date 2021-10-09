@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:socket_io/home.dart';
 import 'package:socket_io/input_name.dart';
+import 'package:socket_io/state_handler.dart';
 
 class GeneratedRoutes {
   static Route<dynamic> onGeneratedRoutes(RouteSettings settings) {
@@ -13,6 +14,8 @@ class GeneratedRoutes {
         }
       case "/input-nickname":
         return MaterialPageRoute(builder: (context) => InputNamePage());
+      case "/state-handler":
+        return MaterialPageRoute(builder: (context) => const StateHandler());
       default:
         return onUnknownRote();
     }

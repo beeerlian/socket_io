@@ -100,14 +100,20 @@ class _HomeState extends State<Home> {
   }
 
   Widget _buildChatBox(int index) {
+    String sender = StreamSocket.messages[index]["sender"].toString();
+    String message = StreamSocket.messages[index]["text"].toString();
+
+    return sender == widget.nickname
+        ? _buildThisUserMessage(sender: sender, message: message)
+        : sender == null
+            ? _buildSeverMessage(message: message)
+            : _buildSeverMessage(message: message);
+  }
+
+  Widget _buildThisUserMessage(
+      {required String sender, required String message}) {
     return Container(
-      alignment:
-          StreamSocket.messages[index]["sender"].toString() == widget.nickname
-              ? const Alignment(1, 0)
-              // ignore: unnecessary_null_comparison
-              : StreamSocket.messages[index]["sender"].toString() == null
-                  ? const Alignment(0, 0)
-                  : const Alignment(-1, 0),
+      alignment: Alignment(1, 0),
       child: Container(
         margin: const EdgeInsets.fromLTRB(10, 5, 10, 5),
         padding: const EdgeInsets.all(5),
@@ -117,12 +123,42 @@ class _HomeState extends State<Home> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            StreamSocket.messages[index]["sender"] != null
-                ? Text(StreamSocket.messages[index]["sender"].toString())
-                : Container(),
-            Text(StreamSocket.messages[index]['text'].toString()),
+            Text(sender),
+            Text(message),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildOtherUserMessage(
+      {required String sender, required String message}) {
+    return Container(
+      alignment: Alignment(-1, 0),
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(10, 5, 10, 5),
+        padding: const EdgeInsets.all(5),
+        decoration: BoxDecoration(
+            color: Colors.amber.shade200,
+            borderRadius: BorderRadius.circular(10)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(sender),
+            Text(message),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSeverMessage({required String message}) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
+        decoration: BoxDecoration(
+            color: Colors.black26, borderRadius: BorderRadius.circular(10)),
+        child: Text(message),
       ),
     );
   }
