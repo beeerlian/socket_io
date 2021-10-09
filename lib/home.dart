@@ -1,6 +1,8 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:socket_io/bloc/pages_bloc.dart';
 import 'package:socket_io/streamsocket.dart';
 import 'package:socket_io/const/const.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
@@ -71,31 +73,42 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: StreamBuilder<Map<String, dynamic>>(
-          stream: widget.streamSocket.getResponse,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              StreamSocket.messages.add(snapshot.data as Map<String, dynamic>);
-              return ListView.builder(
-                controller: _scrollController,
-                shrinkWrap: true,
-                itemCount: StreamSocket.messages.length,
-                itemBuilder: (context, index) {
-                  return _buildChatBox(index);
-                },
-              );
-            } else {
-              return Container();
-            }
-          }),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          sendMessage("Hai dari user mobile");
-          moveScroll();
-        },
-        child: const Icon(Icons.add),
-      ),
+    return BlocBuilder<PagesBloc, PagesState>(
+      builder: (context, state) {
+        return WillPopScope(
+          onWillPop: () async { 
+            socket.disconnect();
+            context.read<PagesBloc>().add(GotoJoinPage());
+            return false;
+           },
+          child: Scaffold(
+            body: StreamBuilder<Map<String, dynamic>>(
+                stream: widget.streamSocket.getResponse,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    StreamSocket.messages.add(snapshot.data as Map<String, dynamic>);
+                    return ListView.builder(
+                      controller: _scrollController,
+                      shrinkWrap: true,
+                      itemCount: StreamSocket.messages.length,
+                      itemBuilder: (context, index) {
+                        return _buildChatBox(index);
+                      },
+                    );
+                  } else {
+                    return Container();
+                  }
+                }),
+            floatingActionButton: FloatingActionButton(
+              onPressed: () {
+                sendMessage("Hai dari user mobile");
+                moveScroll();
+              },
+              child: const Icon(Icons.add),
+            ),
+          ),
+        );
+      }
     );
   }
 
