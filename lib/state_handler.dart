@@ -12,7 +12,7 @@ class StateHandler extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<PagesBloc, PagesState>(
       builder: (_, state) {
-        return _mapStateToPage(state);
+        return Home(nickname: "iu");
       },
     );
   }

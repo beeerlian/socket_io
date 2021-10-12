@@ -11,6 +11,7 @@ class Home extends StatefulWidget {
   Home({Key? key, required this.nickname}) : super(key: key);
   String nickname;
   StreamSocket streamSocket = StreamSocket();
+  TextEditingController messageController = TextEditingController();
   @override
   State<Home> createState() => _HomeState();
 }
@@ -20,6 +21,7 @@ class _HomeState extends State<Home> {
   late io.Socket socket;
   @override
   void dispose() {
+    widget.messageController.dispose();
     _scrollController.dispose();
     widget.streamSocket.dispose();
     super.dispose();
@@ -32,11 +34,12 @@ class _HomeState extends State<Home> {
     super.initState();
   }
 
+  
+
   connectToWebscoketServer() {
     try {
       socket = io.io(uri, <String, dynamic>{
         'transports': ['websocket'],
-        "Upgrade": false
       });
 
       socket.connect();
@@ -71,44 +74,67 @@ class _HomeState extends State<Home> {
     _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
   }
 
+  void _resetTextController() {
+    
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<PagesBloc, PagesState>(
-      builder: (context, state) {
-        return WillPopScope(
-          onWillPop: () async { 
-            socket.disconnect();
-            context.read<PagesBloc>().add(GotoJoinPage());
-            return false;
-           },
-          child: Scaffold(
-            body: StreamBuilder<Map<String, dynamic>>(
-                stream: widget.streamSocket.getResponse,
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    StreamSocket.messages.add(snapshot.data as Map<String, dynamic>);
-                    return ListView.builder(
-                      controller: _scrollController,
-                      shrinkWrap: true,
-                      itemCount: StreamSocket.messages.length,
-                      itemBuilder: (context, index) {
-                        return _buildChatBox(index);
-                      },
-                    );
-                  } else {
-                    return Container();
-                  }
-                }),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () {
-                sendMessage("Hai dari user mobile");
-                moveScroll();
-              },
-              child: const Icon(Icons.add),
-            ),
-          ),
-        );
-      }
+    return BlocBuilder<PagesBloc, PagesState>(builder: (context, state) {
+      return WillPopScope(
+        onWillPop: () async {
+          socket.disconnect();
+          context.read<PagesBloc>().add(GotoJoinPage());
+          return false;
+        },
+        child: Scaffold(
+          backgroundColor: Colors.blueGrey..shade600,
+          body: StreamBuilder<Map<String, dynamic>>(
+              stream: widget.streamSocket.getResponse,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  StreamSocket.messages
+                      .add(snapshot.data as Map<String, dynamic>);
+                  return ListView.builder(
+                    controller: _scrollController,
+                    shrinkWrap: true,
+                    itemCount: StreamSocket.messages.length,
+                    itemBuilder: (context, index) {
+                      return _buildChatBox(index);
+                    },
+                  );
+                } else {
+                  return Container();
+                }
+              }),
+          bottomNavigationBar: _buildBottomNavigationItem(context),
+        ),
+      );
+    });
+  }
+
+  Widget _buildBottomNavigationItem(BuildContext context) {
+    var width = MediaQuery.of(context).size.width;
+    return SizedBox(
+      height: 70,
+      width: width,
+      child: Container(
+          margin: const EdgeInsets.all(10),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: BoxDecoration(
+              color: Colors.white, borderRadius: BorderRadius.circular(30)),
+          child: TextField(
+            controller: widget.messageController,
+            decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: 'Write message here',
+                suffixIcon: IconButton(
+                    onPressed: () async {
+                      await sendMessage(widget.messageController.text);
+                      moveScroll();
+                    },
+                    icon: const Icon(Icons.send))),
+          )),
     );
   }
 
@@ -118,6 +144,7 @@ class _HomeState extends State<Home> {
 
     return sender == widget.nickname
         ? _buildThisUserMessage(sender: sender, message: message)
+        // ignore: unnecessary_null_comparison
         : sender == null
             ? _buildSeverMessage(message: message)
             : _buildSeverMessage(message: message);
@@ -126,17 +153,16 @@ class _HomeState extends State<Home> {
   Widget _buildThisUserMessage(
       {required String sender, required String message}) {
     return Container(
-      alignment: Alignment(1, 0),
+      alignment: const Alignment(1, 0),
       child: Container(
         margin: const EdgeInsets.fromLTRB(10, 5, 10, 5),
         padding: const EdgeInsets.all(5),
         decoration: BoxDecoration(
-            color: Colors.amber.shade200,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(10)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(sender),
             Text(message),
           ],
         ),
@@ -147,7 +173,7 @@ class _HomeState extends State<Home> {
   Widget _buildOtherUserMessage(
       {required String sender, required String message}) {
     return Container(
-      alignment: Alignment(-1, 0),
+      alignment: const Alignment(-1, 0),
       child: Container(
         margin: const EdgeInsets.fromLTRB(10, 5, 10, 5),
         padding: const EdgeInsets.all(5),
@@ -168,6 +194,7 @@ class _HomeState extends State<Home> {
   Widget _buildSeverMessage({required String message}) {
     return Center(
       child: Container(
+        margin: const EdgeInsets.only(top: 10),
         padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
         decoration: BoxDecoration(
             color: Colors.black26, borderRadius: BorderRadius.circular(10)),
